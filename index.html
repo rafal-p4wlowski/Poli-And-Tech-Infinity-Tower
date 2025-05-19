@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poli & Tech: Infinity Tower</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+</head>
+<body>
+    <!-- Glowny kontener gry -->
+    <div id="game-container">
+        <canvas id="game-canvas" width="400" height="600"></canvas>
+        <div id="score-display">Punkty: 0</div>
+
+        <!-- Menu wpisywania nazwy -->
+        <div id="player-name-menu" class="sub-menu" style="display: flex;"> <!-- Domyślnie widoczne -->
+            <h2>Witaj w Poli & Tech!</h2>
+            <p>Podaj swoją nazwę gracza, aby zapisać wyniki w rankingu:</p>
+            <div class="player-name-input-container">
+                <input type="text" id="playerNameInput" placeholder="Twoja nazwa...">
+                <button id="savePlayerNameBtn" class="menu-btn">Zapisz i Graj</button>
+            </div>
+            <p class="player-name-skip">Możesz też <a href="#" id="skipPlayerNameBtn">grać bez zapisywania nazwy</a> (wyniki nie będą w rankingu).</p>
+        </div>
+
+        <!-- Menu glowne gry -->
+        <div id="menu" style="display: none;"> <!-- Domyślnie ukryte -->
+            <h1>Poli & Tech<br>Infinity Tower</h1>
+            <div id="high-score-display-menu"></div>
+            <div id="current-player-display-menu">Witaj, <span id="currentPlayerNameSpan">Graczu</span>!</div>
+            <button id="start-btn" class="menu-btn">Start</button>
+            <button id="new-game-btn" class="menu-btn" style="display: none;">Nowa Gra</button>
+            <button id="ranking-btn" class="menu-btn">Ranking</button>
+            <button id="settings-btn" class="menu-btn">Ustawienia</button>
+        </div>
+
+        <!-- Menu ustawien -->
+        <div id="settings-menu" class="sub-menu">
+            <h2>Wybierz postać</h2>
+            <div class="character-selection">
+                <div class="character-option" data-character="poli">
+                    <div class="character-preview">
+                        <canvas id="poli-preview-canvas" width="80" height="100"></canvas>
+                    </div>
+                    <span>Poli</span>
+                </div>
+                <div class="character-option" data-character="tech">
+                    <div class="character-preview">
+                        <canvas id="tech-preview-canvas" width="80" height="100"></canvas>
+                    </div>
+                    <span>Tech</span>
+                </div>
+            </div>
+            <button id="change-player-name-btn" class="menu-btn small-btn">Zmień nazwę gracza</button>
+            <div class="settings-controls">
+                <label class="toggle-container">
+                    <span>Dźwięk:</span>
+                    <div class="toggle">
+                        <input type="checkbox" id="sound-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </div>
+                </label>
+            </div>
+            <div class="controls-info">
+                <h3>Sterowanie</h3>
+                <ul>
+                    <li>Strzałka w lewo: Poruszanie postacią w lewo.</li>
+                    <li>Strzałka w prawo: Poruszanie postacią w prawo.</li>
+                    <li>Postać automatycznie odbija się od platform.</li>
+                </ul>
+            </div>
+            <button id="back-btn" class="menu-btn">Powrót</button>
+        </div>
+
+        <!-- Menu rankingu -->
+        <div id="leaderboard-menu" class="sub-menu">
+            <h2>Ranking Graczy</h2>
+            <ol id="leaderboard-list">
+                <li>Ładowanie rankingu...</li>
+            </ol>
+            <button id="refresh-leaderboard-btn" class="menu-btn small-btn">Odśwież</button>
+            <button id="back-to-main-menu-from-leaderboard-btn" class="menu-btn">Powrót</button>
+        </div>
+
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

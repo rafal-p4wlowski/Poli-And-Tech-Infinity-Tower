@@ -1,0 +1,386 @@
+/* ===== Ustawienia Globalne ===== */
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #333;
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+}
+
+/* ===== Kontener Gry ===== */
+#game-container {
+    position: relative;
+    width: 400px; /* Zostawiam bazowe wymiary, resizeGame() je dostosuje */
+    height: 600px;
+    box-shadow: 0 0 25px rgba(0, 182, 237, 0.6);
+    background-color: #000; /* Dodane dla pewności, że tło jest ciemne */
+}
+
+#game-canvas {
+    border: 3px solid #70126B;
+    display: block; /* Ważne dla poprawnego pozycjonowania menu */
+    width: 100%;
+    height: 100%;
+    position: absolute; /* Canvas pod menu */
+    top: 0;
+    left: 0;
+    z-index: 1; 
+}
+
+#score-display {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #FFFFFF;
+    background-color: rgba(0, 182, 237, 0.75);
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    z-index: 10; /* Nad canvas, ale pod menu, które mają wyższy z-index */
+}
+
+/* ===== Menu Główne i Podmenu ===== */
+#menu,
+.sub-menu {
+    position: absolute;
+    top: 3px;
+    left: 2.3px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #FFFFFF;
+    text-align: center;
+    box-sizing: border-box; /* Aby padding nie powiększał elementu */
+    padding: 20px;
+    z-index: 20; /* Menu zawsze na wierzchu */
+}
+
+#menu { /* Menu główne */
+    background-color: rgba(112, 18, 107, 0.85); /* Kolor tła dla menu głównego */
+}
+
+.sub-menu { /* Wspólne dla wszystkich podmenu (ustawienia, ranking, wpisywanie nazwy) */
+    background-color: rgba(112, 18, 107, 0.95); /* Nieco ciemniejsze tło dla podmenu */
+    display: none; /* Domyślnie ukryte, JS będzie je pokazywać */
+}
+
+#player-name-menu { /* Specyficzne dla menu wpisywania nazwy */
+    background-color: rgba(50, 10, 70, 0.95); /* Ciemniejsze tło dla początkowego menu */
+}
+#player-name-menu h2 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+}
+#player-name-menu p {
+    margin: 10px 0;
+    font-size: 1em;
+    line-height: 1.4;
+}
+.player-name-input-container {
+    display: flex;
+    flex-direction: column; /* Elementy jeden pod drugim na mniejszych ekranach */
+    align-items: center;
+    margin: 20px 0;
+    width: 80%;
+    max-width: 300px;
+}
+#playerNameInput {
+    padding: 12px;
+    font-size: 1em;
+    border: 2px solid #00B6ED;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+.player-name-skip {
+    font-size: 0.9em;
+    margin-top: 15px;
+}
+.player-name-skip a {
+    color: #00B6ED;
+    text-decoration: underline;
+}
+
+
+#menu h1 {
+    margin-bottom: 20px;
+    font-size: 2.2em;
+    text-shadow: 0 0 10px #00B6ED;
+}
+
+#high-score-display-menu {
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 0px;
+    margin-bottom: 25px;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+
+#current-player-display-menu {
+    color: #f0f0f0;
+    font-size: 1em;
+    margin-bottom: 20px;
+    padding: 5px 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+
+.sub-menu h2 {
+    margin-top: 0; /* Usunięty margines górny dla tytułów podmenu */
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00B6ED;
+    font-size: 1.8em; /* Ujednolicony rozmiar dla podmenu */
+}
+
+/* ===== Przyciski Menu ===== */
+.menu-btn {
+    padding: 12px 25px; /* Lekko zmniejszony padding */
+    margin: 8px;
+    background-color: #00B6ED;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+    border-radius: 5px;
+    font-size: 17px; /* Lekko zmniejszony font */
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    min-width: 150px; /* Minimalna szerokość dla spójności */
+    text-align: center;
+}
+
+.menu-btn:hover {
+    background-color: #0095c7;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.menu-btn.small-btn { /* Mniejszy przycisk np. do odświeżania, zmiany nazwy */
+    padding: 8px 15px;
+    font-size: 14px;
+    min-width: auto;
+}
+
+
+/* ===== Wybór Postaci (w Menu Ustawień) ===== */
+.character-selection {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.character-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.character-option:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.character-option.selected {
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 182, 237, 0.6);
+}
+
+.character-preview {
+    width: 80px;
+    height: 100px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 2px solid #FFFFFF;
+    overflow: hidden;
+}
+
+.character-option span {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#poli-preview-canvas,
+#tech-preview-canvas {
+    background-color: rgba(0, 182, 237, 0.2);
+}
+
+
+/* ===== Kontrolki Ustawień (np. Dźwięk) ===== */
+.settings-controls {
+    margin: 15px 0; /* Zmniejszone */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px; /* Zmniejszone */
+    font-size: 17px; /* Zmniejszone */
+}
+.toggle-container span:first-child {
+    margin-right: 10px;
+}
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 46px; /* Zmniejszone */
+    height: 26px; /* Zmniejszone */
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: background-color .4s;
+    border-radius: 26px; /* Dopasowane */
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; /* Zmniejszone */
+    width: 18px; /* Zmniejszone */
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: transform .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #00B6ED;
+}
+
+input:focus + .toggle-slider {
+    box-shadow: 0 0 1px #00B6ED;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px); /* Dopasowane */
+}
+
+/* ===== Informacje o Sterowaniu ===== */
+.controls-info {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 15px; /* Zmniejszone */
+    margin: 12px 0; /* Zmniejszone */
+    text-align: left;
+    max-width: 85%; /* Lekko zwiększone dla czytelności */
+}
+
+.controls-info h3 {
+    margin-top: 0;
+    margin-bottom: 8px; /* Zmniejszone */
+    text-align: center;
+    color: #fff;
+    font-size: 17px; /* Zmniejszone */
+}
+
+.controls-info ul {
+    padding-left: 0;
+    margin: 0;
+    list-style-type: none; 
+}
+
+.controls-info li {
+    margin-bottom: 6px; /* Zmniejszone */
+    color: #ddd;
+    font-size: 13px; /* Zmniejszone */
+    display: flex;
+    align-items: center;
+}
+
+.controls-info .key-symbol { /* Zachowuję, jeśli chcesz dodać symbole klawiszy */
+    display: inline-block;
+    background-color: #444;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-right: 8px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+    box-shadow: 0 2px 0 #222;
+}
+
+/* ===== Sekcja Rankingu ===== */
+#leaderboard-menu {
+    justify-content: flex-start; /* Aby lista była na górze */
+    padding-top: 30px; /* Odstęp od góry */
+}
+
+#leaderboard-list {
+    list-style-type: decimal;
+    padding-left: 20px; /* Wcięcie dla numeracji */
+    margin: 0 auto 20px auto; /* Centrowanie i margines dolny */
+    width: 80%;
+    max-width: 320px; /* Maksymalna szerokość listy */
+    text-align: left;
+    max-height: 60%; /* Ograniczenie wysokości, aby przyciski były widoczne */
+    overflow-y: auto; /* Scroll, jeśli lista jest za długa */
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#leaderboard-list li {
+    padding: 6px 0; /* Zmniejszony padding */
+    border-bottom: 1px dashed rgba(255,255,255,0.3);
+    font-size: 15px; /* Zmniejszony font */
+    list-style-type: none;
+}
+
+#leaderboard-list li:last-child {
+    border-bottom: none;
+}
+
+#leaderboard-list li.loading,
+#leaderboard-list li.empty {
+    text-align: center;
+    font-style: italic;
+    color: #ccc;
+}
+
+/* Upewnij się, że canvas jest pod menu */
+#game-canvas {
+    z-index: 1;
+}
+#menu, .sub-menu {
+    z-index: 20;
+}
+#score-display {
+    z-index: 10;
+}

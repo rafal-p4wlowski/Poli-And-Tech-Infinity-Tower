@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="174 58.5 152 216.5">
+    <style>
+        text { font-family: Arial; font-weight: bold; }
+    </style>
+    <g>
+        <ellipse cx="225" cy="260" rx="20" ry="15" fill="#222222" />
+        <ellipse cx="275" cy="260" rx="20" ry="15" fill="#222222" />
+        <rect x="205" y="150" width="90" height="100" rx="25" ry="25" fill="#FFFFFF"
+            stroke="#00a0e3" stroke-width="3" />
+        <rect id="left-arm" x="180" y="170" width="25" height="70" rx="10" ry="10" fill="#FFFFFF"
+            stroke="#00a0e3" stroke-width="3" />
+        <rect id="right-arm" x="295" y="170" width="25" height="70" rx="10" ry="10" fill="#FFFFFF"
+            stroke="#00a0e3" stroke-width="3" />
+        <text x="250" y="185" font-size="14" text-anchor="middle"> POLI </text>
+        <text x="220" y="205" font-size="14" text-anchor="middle" fill="#00a0e3">[</text>
+        <text x="250" y="205" font-size="14" text-anchor="middle">TECH</text>
+        <text x="280" y="205" font-size="14" text-anchor="middle" fill="#00a0e3">&gt;</text>
+        <text x="250" y="225" font-size="14" text-anchor="middle"> NIKA </text>
+        <ellipse id="head" cx="250" cy="110" rx="55" ry="50" fill="#FFFFFF" stroke="#00a0e3"
+            stroke-width="3" />
+        <ellipse cx="250" cy="105" rx="38" ry="20" fill="#222222" />
+        <g transform="translate(225, 80) rotate(-17)">
+            <polygon points="0,0 -15,5 -15,-5" fill="#00a0e3" />
+            <polygon points="0,0 15,5 15,-5" fill="#00a0e3" />
+            <circle cx="0" cy="0" r="4" fill="#00a0e3" />
+        </g>
+        <g stroke="#00a0e3" stroke-linecap="round">
+            <path d="M223,110 L235,102 L247,110" stroke-width="4" />
+            <path d="M253,110 L265,102 L277,110" stroke-width="4" />
+            <line x1="235" y1="102" x2="235" y2="96" stroke-width="2" transform="rotate(0 235 102)" />
+            <line x1="227" y1="102" x2="227" y2="96" stroke-width="2"
+                transform="rotate(-17 227 102)" />
+            <line x1="243" y1="102" x2="243" y2="96" stroke-width="2" transform="rotate(17 243 102)" />
+            <line x1="265" y1="102" x2="265" y2="96" stroke-width="2" transform="rotate(0 265 102)" />
+            <line x1="257" y1="102" x2="257" y2="96" stroke-width="2"
+                transform="rotate(-17 257 102)" />
+            <line x1="273" y1="102" x2="273" y2="96" stroke-width="2" transform="rotate(17 273 102)" />
+        </g>
+        <circle cx="190" cy="110" r="15" fill="#FFFFFF" stroke="#00a0e3" stroke-width="2" />
+        <circle cx="310" cy="110" r="15" fill="#FFFFFF" stroke="#00a0e3" stroke-width="2" />
+    </g>
+</svg>
