@@ -80,6 +80,7 @@ const techPreviewCtx = techPreviewCanvas.getContext('2d');
 const THEME_COLOR_FACULTY_PURPLE = '#70126B';
 const THEME_COLOR_POLYTECHNIC_BLUE = '#00B6ED';
 const THEME_COLOR_WHITE = '#FFFFFF';
+const BLINKING_PLATFORM_MAIN_COLOR = '#E40134';
 
 // ===== FIZYKA GRY =====
 const GRAVITY_ACCELERATION = 1000; 
@@ -89,13 +90,13 @@ const PLAYER_MAX_HORIZ_SPEED = 500;
 // ===== STAŁE PLATFORM =====
 const PLATFORM_COUNT = 5; 
 const PLATFORM_HEIGHT = 15; 
-const MIN_PLATFORM_WIDTH = 200; 
-const MAX_PLATFORM_WIDTH = 300; 
-const PLATFORM_WIDTH_DECREASE_RATE = 10; 
-const PLATFORM_DIFFICULTY_STEP = 100; 
-const MIN_PLATFORM_WIDTH_HARD = 30; 
-const PLATFORM_BASE_MOVE_SPEED = 80; 
-const PLATFORM_MAX_MOVE_SPEED = 200; 
+const MIN_PLATFORM_WIDTH = 180;
+const MAX_PLATFORM_WIDTH = 280;
+const PLATFORM_WIDTH_DECREASE_RATE = 12;
+const PLATFORM_DIFFICULTY_STEP = 80;
+const MIN_PLATFORM_WIDTH_HARD = 25;
+const PLATFORM_BASE_MOVE_SPEED = 90;
+const PLATFORM_MAX_MOVE_SPEED = 250;
 
 // ===== STAŁE GRACZA =====
 const PLAYER_WIDTH = 60; 
@@ -112,8 +113,13 @@ const PLATFORM_TYPES = {
     NORMAL: 'normal',
     BOUNCY: 'bouncy',
     MOVING: 'moving',
-    FRAGILE: 'fragile'
+    FRAGILE: 'fragile',
+    BLINKING: 'blinking'
 };
+
+// ===== USTAWIENIA MRUGAJĄCYCH PLATFORM =====
+const BLINKING_PLATFORM_INTERVAL = 3000;
+const BLINKING_PLATFORM_VISIBLE_DURATION = 2000;
 
 // ===== TYPY ZNAJDZIEK I USTAWIENIA =====
 const COLLECTIBLE_TYPES = {
@@ -127,10 +133,10 @@ const POWER_UP_DURATION_SECONDS = 5;
 const SHIELD_DURATION_SECONDS = 10; 
 const REVERSE_CONTROLS_DURATION_SECONDS = 3; 
 
-// ===== STAŁE PODNOSZENIA EKRANU (ROSZĄCA PODŁOGA) =====
-const INITIAL_SCREEN_PUSH_SPEED = 15; 
-const SCREEN_PUSH_ACCELERATION = 1;  
-const SCREEN_PUSH_SCORE_INTERVAL = 250; 
+// ===== STAŁE PODNOSZENIA EKRANU =====
+const INITIAL_SCREEN_PUSH_SPEED = 20;
+const SCREEN_PUSH_ACCELERATION = 1.5;
+const SCREEN_PUSH_SCORE_INTERVAL = 200;
 
 // ===== ESTETYCZNE ZMIANY ŚWIATA GRY =====
 const BACKGROUND_THEMES = [ 
@@ -173,6 +179,7 @@ let currentScreenPushSpeed = INITIAL_SCREEN_PUSH_SPEED;
 let player = {};
 let keys = { ArrowLeft: false, ArrowRight: false };
 let lastTime = 0; 
+let gameTime = 0;
 
 // Zmienne dla rankingu i nazwy gracza
 let currentPlayerName = ''; // Przechowuje aktualną nazwę gracza
@@ -223,16 +230,18 @@ function getPlatformParameters(currentScore) {
     let minWidth = MIN_PLATFORM_WIDTH - (difficultyLevel * PLATFORM_WIDTH_DECREASE_RATE);
     let maxWidth = MAX_PLATFORM_WIDTH - (difficultyLevel * PLATFORM_WIDTH_DECREASE_RATE * 1.5);
     minWidth = Math.max(minWidth, MIN_PLATFORM_WIDTH_HARD); 
-    maxWidth = Math.max(maxWidth, MIN_PLATFORM_WIDTH_HARD + 50); 
+    maxWidth = Math.max(maxWidth, MIN_PLATFORM_WIDTH_HARD + 40);
     if (maxWidth < minWidth) maxWidth = minWidth + 10; 
     return { minWidth, maxWidth };
 }
 
+// ZMODYFIKOWANE SZANSE NA PLATFORMY SPECJALNE
 function getSpecialPlatformChances(level) {
     return {
-        [PLATFORM_TYPES.BOUNCY]: Math.min(0.05 + level * 0.01, 0.15),  
-        [PLATFORM_TYPES.MOVING]: Math.min(0.03 + level * 0.01, 0.12),  
-        [PLATFORM_TYPES.FRAGILE]: Math.min(0.02 + level * 0.015, 0.20) 
+        [PLATFORM_TYPES.BOUNCY]: Math.min(0.06 + level * 0.012, 0.18),
+        [PLATFORM_TYPES.MOVING]: Math.min(0.05 + level * 0.015, 0.20),
+        [PLATFORM_TYPES.FRAGILE]: Math.min(0.04 + level * 0.018, 0.25),
+        [PLATFORM_TYPES.BLINKING]: Math.min(0.03 + level * 0.01, 0.15)
     };
 }
 
@@ -569,18 +578,13 @@ async function submitScoreToLeaderboard(finalScore) {
         }
         const result = await response.json();
         console.log('Odpowiedź serwera po zapisie wyniku:', result.message);
-        // Opcjonalnie: poinformuj gracza, że wynik został zapisany online
-        // alert(`Wynik ${finalScore} zapisany w rankingu online!`);
-        fetchLeaderboard(); // Odśwież ranking po wysłaniu wyniku
+        fetchLeaderboard(); 
     } catch (error) {
         console.error('Błąd podczas wysyłania wyniku do rankingu:', error);
-        // Opcjonalnie: poinformuj gracza o błędzie
-        // alert(`Nie udało się zapisać wyniku w rankingu online: ${error.message}`);
     }
 }
 
 function updateLocalHighScoreDisplay() {
-    // Aktualizacja wyświetlania lokalnego highScore w menu
     const localHighScore = parseInt(localStorage.getItem('poliTechLocalHighScore') || '0');
     if (localHighScore > 0) {
         highScoreDisplayMenu.innerText = `Twój najlepszy wynik: ${localHighScore}`;
@@ -588,44 +592,37 @@ function updateLocalHighScoreDisplay() {
     } else {
         highScoreDisplayMenu.style.display = 'none';
     }
-    // Zapisanie globalnej zmiennej highScore (jeśli potrzebne gdzie indziej)
     highScore = localHighScore;
 }
 
 
 // ===== KONFIGURACJA UI I NAWIGACJA =====
 function setupMenusAndNavigation() {
-    // Przycisk Start (teraz w menu głównym, które pojawia się po wpisaniu nazwy)
     startBtn.addEventListener('click', () => {
-        // Walidacja, czy nazwa gracza jest ustawiona, nie jest już tu potrzebna,
-        // bo menu główne pojawia się dopiero po obsłużeniu nazwy gracza.
         showGameScreen();
         startGameLogic();
     });
 
-    // Przycisk Nowa Gra (pojawia się po gameOver)
     newGameBtn.addEventListener('click', () => {
-        showGameScreen(); // Pokaż ekran gry
-        resetGameLogic(); // Zresetuj logikę gry
-        startGameLogic(); // Rozpocznij nową grę
+        showGameScreen(); 
+        resetGameLogic(); 
+        startGameLogic(); 
     });
     
-    // Ustawienia
     settingsBtn.addEventListener('click', () => {
         menu.style.display = 'none';
         settingsMenu.style.display = 'flex';
     });
-    backBtn.addEventListener('click', () => { // Powrót z ustawień
+    backBtn.addEventListener('click', () => { 
         settingsMenu.style.display = 'none';
         menu.style.display = 'flex';
-        updateLocalHighScoreDisplay(); // Upewnij się, że highScore jest aktualny
+        updateLocalHighScoreDisplay(); 
     });
 
-    // Ranking
     rankingBtn.addEventListener('click', () => {
         menu.style.display = 'none';
         leaderboardMenu.style.display = 'flex';
-        fetchLeaderboard(); // Zawsze pobieraj świeży ranking po wejściu
+        fetchLeaderboard(); 
     });
     backToMainMenuFromLeaderboardBtn.addEventListener('click', () => {
         leaderboardMenu.style.display = 'none';
@@ -633,7 +630,6 @@ function setupMenusAndNavigation() {
     });
     refreshLeaderboardBtn.addEventListener('click', fetchLeaderboard);
 
-    // Zarządzanie nazwą gracza
     savePlayerNameBtn.addEventListener('click', savePlayerNameAndProceed);
     playerNameInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
@@ -641,7 +637,7 @@ function setupMenusAndNavigation() {
         }
     });
     skipPlayerNameBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Zapobiegaj domyślnej akcji linku
+        e.preventDefault(); 
         skipPlayerName();
     });
     changePlayerNameBtn.addEventListener('click', changePlayerName);
@@ -654,14 +650,13 @@ function setupMenusAndNavigation() {
     }
 }
 
-// Funkcje pomocnicze do pokazywania/ukrywania ekranów
 function showPlayerNameScreen() {
     playerNameMenu.style.display = 'flex';
     menu.style.display = 'none';
     settingsMenu.style.display = 'none';
     leaderboardMenu.style.display = 'none';
-    canvas.style.display = 'block'; // Canvas może być widoczny w tle
-    scoreDisplay.style.display = 'none'; // Ukryj punkty podczas gry
+    canvas.style.display = 'block'; 
+    scoreDisplay.style.display = 'none'; 
 }
 
 function showMainMenu() {
@@ -680,13 +675,9 @@ function showGameScreen() {
     settingsMenu.style.display = 'none';
     leaderboardMenu.style.display = 'none';
     canvas.style.display = 'block';
-    scoreDisplay.style.display = 'block'; // Pokaż punkty podczas gry
+    scoreDisplay.style.display = 'block'; 
 }
 
-
-/**
- * Resetuje stan gracza do wartości początkowych.
- */
 function resetPlayerState() {
     const initialSvgDoc = player.svgDoc;
     const initialModel = player.model;
@@ -769,7 +760,8 @@ function addNewPlatform(maxWidth, minWidth, y) {
         [PLATFORM_TYPES.NORMAL]: { colorTop: '#A0429B', colorBottom: THEME_COLOR_FACULTY_PURPLE, highlightColor: '#B788B5' },
         [PLATFORM_TYPES.BOUNCY]: { colorTop: '#1A48A6', colorBottom: '#13357A', highlightColor: '#7185AF' },
         [PLATFORM_TYPES.MOVING]: { colorTop: '#19A65D', colorBottom: '#009D4C', highlightColor: '#66C493' },
-        [PLATFORM_TYPES.FRAGILE]: { colorTop: '#F18A3B', colorBottom: '#F07E26', highlightColor: '#F9CBA8' }
+        [PLATFORM_TYPES.FRAGILE]: { colorTop: '#F18A3B', colorBottom: '#F07E26', highlightColor: '#F9CBA8' },
+        [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' } // Kolory dla mrugającej platformy
     };
 
     const platformColorPalettes = [
@@ -778,13 +770,15 @@ function addNewPlatform(maxWidth, minWidth, y) {
             [PLATFORM_TYPES.NORMAL]: { colorTop: '#C062BB', colorBottom: '#90328B', highlightColor: '#D7A8D5' },
             [PLATFORM_TYPES.BOUNCY]: { colorTop: '#3A68C6', colorBottom: '#33559A', highlightColor: '#91A5CF' },
             [PLATFORM_TYPES.MOVING]: { colorTop: '#39C67D', colorBottom: '#20B06C', highlightColor: '#86E4B3' },
-            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#feb46b', colorBottom: '#ff9633', highlightColor: '#FFDBCA' }
+            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#feb46b', colorBottom: '#ff9633', highlightColor: '#FFDBCA' },
+            [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' }
         },
         { 
             [PLATFORM_TYPES.NORMAL]: { colorTop: '#8A2BE2', colorBottom: '#4B0082', highlightColor: '#C7A0E5' },
             [PLATFORM_TYPES.BOUNCY]: { colorTop: '#00CED1', colorBottom: '#20B2AA', highlightColor: '#A0E5E5' },
             [PLATFORM_TYPES.MOVING]: { colorTop: '#32CD32', colorBottom: '#228B22', highlightColor: '#98FB98' },
-            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#FF6347', colorBottom: '#DC143C', highlightColor: '#FFA07A' }
+            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#FF6347', colorBottom: '#DC143C', highlightColor: '#FFA07A' },
+            [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' }
         }
     ];
 
@@ -799,14 +793,17 @@ function addNewPlatform(maxWidth, minWidth, y) {
         type: platformType, level,
         moveDirection: (platformType === PLATFORM_TYPES.MOVING) ? (Math.random() > 0.5 ? 1 : -1) : 0, 
         moveSpeed: (platformType === PLATFORM_TYPES.MOVING) ? 
-            Math.min(PLATFORM_BASE_MOVE_SPEED + Math.random() * Math.min(level, 5) * 15, PLATFORM_MAX_MOVE_SPEED) : 0,
+            Math.min(PLATFORM_BASE_MOVE_SPEED + Math.random() * Math.min(level, 8) * 20, PLATFORM_MAX_MOVE_SPEED) : 0,
         health: (platformType === PLATFORM_TYPES.FRAGILE) ? 1 : Infinity, 
         bounceVelocity: (platformType === PLATFORM_TYPES.BOUNCY) ? (JUMP_VELOCITY_INITIAL * 1.5) : JUMP_VELOCITY_INITIAL, 
-        borderRadius: borderRadius
+        borderRadius: borderRadius,
+        isVisible: (platformType === PLATFORM_TYPES.BLINKING) ? true : undefined,
+        blinkTimer: (platformType === PLATFORM_TYPES.BLINKING) ? BLINKING_PLATFORM_VISIBLE_DURATION : undefined,
+        initialBlinkOffset: (platformType === PLATFORM_TYPES.BLINKING) ? Math.random() * BLINKING_PLATFORM_INTERVAL : 0
     };
     platforms.push(newPlatform); 
 
-    if (Math.random() < COLLECTIBLE_CHANCE && platformType !== PLATFORM_TYPES.FRAGILE) {
+    if (Math.random() < COLLECTIBLE_CHANCE && platformType !== PLATFORM_TYPES.FRAGILE && platformType !== PLATFORM_TYPES.BLINKING) {
         createCollectible(x + platformWidth / 2, y); 
     }
     return newPlatform;
@@ -820,15 +817,13 @@ function init() {
     resetPlayerState(); 
     loadPlayerModel(currentCharacter); 
     setupCharacterSelection(); 
-    setupMenusAndNavigation(); // Zamiast setupSettingsMenu, teraz jest bardziej ogólne
+    setupMenusAndNavigation();
 
     document.addEventListener('keydown', keyDownHandler);
     document.addEventListener('keyup', keyUpHandler);
     
-    // Decyzja, które menu pokazać na starcie (nazwa gracza lub główne)
-    loadPlayerName(); // Ta funkcja zdecyduje, co pokazać
+    loadPlayerName(); 
 
-    // Ukryj przyciski, które nie powinny być widoczne od razu w menu głównym
     newGameBtn.style.display = 'none'; 
     highScoreDisplayMenu.style.display = 'none'; 
 
@@ -839,17 +834,11 @@ function init() {
 }
 
 function drawStaticElements() {
-    // Ta funkcja powinna rysować tło i elementy menu, jeśli canvas jest widoczny
-    // Jeśli canvas jest ukryty za menu pełnoekranowym, może nie być potrzeby rysowania
     if (canvas.style.display !== 'none') {
         drawBackground();
-        // Można by tu warunkowo rysować platformy/gracza, jeśli są częścią tła menu
-        // Na razie zakładamy, że menu pełnoekranowe zakrywa canvas
-        // Jeśli chcesz, aby canvas był widoczny za menu, to drawPlatforms() i drawPlayer() tutaj
     }
 }
 
-// Logika startu gry (wywoływana po kliknięciu Start/Nowa Gra)
 function startGameLogic() {
     if (gameRunning) return; 
     
@@ -862,10 +851,10 @@ function startGameLogic() {
     }
 
     lastTime = 0; 
+    gameTime = 0;
     gameAnimationLoop(); 
 }
 
-// Logika resetowania gry (wywoływana przed startem nowej gry)
 function resetGameLogic() {
     gameRunning = false; 
     score = 0; 
@@ -873,6 +862,7 @@ function resetGameLogic() {
     cameraOffset = 0; 
     collectibles = []; 
     keys = { ArrowLeft: false, ArrowRight: false }; 
+    gameTime = 0;
 
     resetPlayerState(); 
     createInitialPlatforms(); 
@@ -887,7 +877,7 @@ function resetGameLogic() {
     }
 }
 
-function handleGameOver() { // Zmieniona nazwa z gameOver na handleGameOver, aby uniknąć konfliktu
+function handleGameOver() { 
     if (player.hasShield) {
         player.hasShield = false;
         player.shieldTimer = 0; 
@@ -901,20 +891,18 @@ function handleGameOver() { // Zmieniona nazwa z gameOver na handleGameOver, aby
     playSound('gameOver'); 
     sounds.background.pause(); 
 
-    // Zapisz lokalny najlepszy wynik
     const localHighScore = parseInt(localStorage.getItem('poliTechLocalHighScore') || '0');
     if (score > localHighScore) {
         localStorage.setItem('poliTechLocalHighScore', score.toString());
-        highScore = score; // Aktualizuj globalną zmienną highScore
+        highScore = score; 
     }
-    updateLocalHighScoreDisplay(); // Zaktualizuj wyświetlanie w menu
+    updateLocalHighScoreDisplay(); 
 
-    // Wyślij wynik do rankingu online, jeśli gracz podał nazwę
     if (currentPlayerName) {
         submitScoreToLeaderboard(score);
     }
 
-    showMainMenu(); // Pokaż menu główne
+    showMainMenu(); 
     startBtn.style.display = 'none'; 
     newGameBtn.style.display = 'block'; 
     settingsBtn.style.display = 'block'; 
@@ -934,6 +922,7 @@ function keyUpHandler(e) {
 // ===== LOGIKA AKTUALIZACJI GRY =====
 function update(deltaTime) {
     if (!gameRunning) return; 
+    gameTime += deltaTime * 1000;
 
     updatePlayerMovement(deltaTime); 
     updatePlayerPhysics(deltaTime); 
@@ -947,7 +936,7 @@ function update(deltaTime) {
     updateCameraAndElements(deltaTime); 
 
     if (player.y > canvas.height + player.height * 0.5) { 
-        handleGameOver(); // Użyj nowej nazwy funkcji
+        handleGameOver(); 
     }
 }
 
@@ -1012,6 +1001,10 @@ function updatePlatforms(deltaTime) {
                 p.x = Math.max(0, Math.min(p.x, canvas.width - p.width)); 
             }
         }
+        if (p.type === PLATFORM_TYPES.BLINKING) {
+            const timeInCycle = (gameTime + p.initialBlinkOffset) % BLINKING_PLATFORM_INTERVAL;
+            p.isVisible = timeInCycle < BLINKING_PLATFORM_VISIBLE_DURATION;
+        }
     });
     platforms = platforms.filter(p => p.health > 0); 
 }
@@ -1019,6 +1012,11 @@ function updatePlatforms(deltaTime) {
 function checkPlatformCollisions(deltaTime) {
     for (let i = 0; i < platforms.length; i++) {
         const p = platforms[i];
+
+        if (p.type === PLATFORM_TYPES.BLINKING && !p.isVisible) {
+            continue;
+        }
+
         const playerFeetCurrent = player.y + player.height; 
         const playerFeetPrevious = (player.y - (player.vy * deltaTime)) + player.height; 
 
@@ -1179,12 +1177,29 @@ function drawPlatforms() {
         if (p.type === PLATFORM_TYPES.FRAGILE && p.health < 1) {
             return; 
         }
+        if (p.type === PLATFORM_TYPES.BLINKING && !p.isVisible) {
+            return;
+        }
 
         const platformGradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
         platformGradient.addColorStop(0, p.colorTop); 
         platformGradient.addColorStop(1, p.colorBottom); 
         ctx.fillStyle = platformGradient;
+        
+        if (p.type === PLATFORM_TYPES.BLINKING) {
+            const timeInCycle = (gameTime + p.initialBlinkOffset) % BLINKING_PLATFORM_INTERVAL;
+            const timeLeftVisible = BLINKING_PLATFORM_VISIBLE_DURATION - timeInCycle;
+            if (timeInCycle < BLINKING_PLATFORM_VISIBLE_DURATION && timeLeftVisible < 300) {
+                ctx.globalAlpha = Math.max(0.2, timeLeftVisible / 300);
+            } else {
+                 ctx.globalAlpha = 1;
+            }
+        } else {
+            ctx.globalAlpha = 1;
+        }
+
         drawRoundedRect(ctx, p.x, p.y, p.width, p.height, p.borderRadius || 0); 
+        ctx.globalAlpha = 1;
 
         ctx.fillStyle = p.highlightColor;
         
