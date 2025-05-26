@@ -80,7 +80,6 @@ const techPreviewCtx = techPreviewCanvas.getContext('2d');
 const THEME_COLOR_FACULTY_PURPLE = '#70126B';
 const THEME_COLOR_POLYTECHNIC_BLUE = '#00B6ED';
 const THEME_COLOR_WHITE = '#FFFFFF';
-const BLINKING_PLATFORM_MAIN_COLOR = '#E40134';
 
 // ===== FIZYKA GRY =====
 const GRAVITY_ACCELERATION = 1000; 
@@ -90,13 +89,13 @@ const PLAYER_MAX_HORIZ_SPEED = 500;
 // ===== STAŁE PLATFORM =====
 const PLATFORM_COUNT = 5; 
 const PLATFORM_HEIGHT = 15; 
-const MIN_PLATFORM_WIDTH = 180;
-const MAX_PLATFORM_WIDTH = 280;
-const PLATFORM_WIDTH_DECREASE_RATE = 12;
-const PLATFORM_DIFFICULTY_STEP = 80;
-const MIN_PLATFORM_WIDTH_HARD = 25;
-const PLATFORM_BASE_MOVE_SPEED = 90;
-const PLATFORM_MAX_MOVE_SPEED = 250;
+const MIN_PLATFORM_WIDTH = 180; 
+const MAX_PLATFORM_WIDTH = 280; 
+const PLATFORM_WIDTH_DECREASE_RATE = 12; 
+const PLATFORM_DIFFICULTY_STEP = 80;  
+const MIN_PLATFORM_WIDTH_HARD = 25; 
+const PLATFORM_BASE_MOVE_SPEED = 90; 
+const PLATFORM_MAX_MOVE_SPEED = 250; 
 
 // ===== STAŁE GRACZA =====
 const PLAYER_WIDTH = 60; 
@@ -113,13 +112,8 @@ const PLATFORM_TYPES = {
     NORMAL: 'normal',
     BOUNCY: 'bouncy',
     MOVING: 'moving',
-    FRAGILE: 'fragile',
-    BLINKING: 'blinking'
+    FRAGILE: 'fragile'
 };
-
-// ===== USTAWIENIA MRUGAJĄCYCH PLATFORM =====
-const BLINKING_PLATFORM_INTERVAL = 3000;
-const BLINKING_PLATFORM_VISIBLE_DURATION = 2000;
 
 // ===== TYPY ZNAJDZIEK I USTAWIENIA =====
 const COLLECTIBLE_TYPES = {
@@ -134,9 +128,9 @@ const SHIELD_DURATION_SECONDS = 10;
 const REVERSE_CONTROLS_DURATION_SECONDS = 3; 
 
 // ===== STAŁE PODNOSZENIA EKRANU =====
-const INITIAL_SCREEN_PUSH_SPEED = 20;
-const SCREEN_PUSH_ACCELERATION = 1.5;
-const SCREEN_PUSH_SCORE_INTERVAL = 200;
+const INITIAL_SCREEN_PUSH_SPEED = 20; 
+const SCREEN_PUSH_ACCELERATION = 1.5;  
+const SCREEN_PUSH_SCORE_INTERVAL = 200; 
 
 // ===== ESTETYCZNE ZMIANY ŚWIATA GRY =====
 const BACKGROUND_THEMES = [ 
@@ -171,7 +165,7 @@ let currentCharacter = 'poli';
 let characterPreviews = { poli: new Image(), tech: new Image() }; 
 let gameRunning = false; 
 let score = 0; 
-let highScore = 0; // Lokalny najlepszy wynik
+let highScore = 0; 
 let platforms = []; 
 let collectibles = []; 
 let cameraOffset = 0; 
@@ -179,10 +173,9 @@ let currentScreenPushSpeed = INITIAL_SCREEN_PUSH_SPEED;
 let player = {};
 let keys = { ArrowLeft: false, ArrowRight: false };
 let lastTime = 0; 
-let gameTime = 0;
 
 // Zmienne dla rankingu i nazwy gracza
-let currentPlayerName = ''; // Przechowuje aktualną nazwę gracza
+let currentPlayerName = '';
 
 
 // ===== INICJALIZACJA I KONTROLA DŹWIĘKÓW =====
@@ -230,18 +223,16 @@ function getPlatformParameters(currentScore) {
     let minWidth = MIN_PLATFORM_WIDTH - (difficultyLevel * PLATFORM_WIDTH_DECREASE_RATE);
     let maxWidth = MAX_PLATFORM_WIDTH - (difficultyLevel * PLATFORM_WIDTH_DECREASE_RATE * 1.5);
     minWidth = Math.max(minWidth, MIN_PLATFORM_WIDTH_HARD); 
-    maxWidth = Math.max(maxWidth, MIN_PLATFORM_WIDTH_HARD + 40);
+    maxWidth = Math.max(maxWidth, MIN_PLATFORM_WIDTH_HARD + 40); 
     if (maxWidth < minWidth) maxWidth = minWidth + 10; 
     return { minWidth, maxWidth };
 }
 
-// ZMODYFIKOWANE SZANSE NA PLATFORMY SPECJALNE
 function getSpecialPlatformChances(level) {
     return {
-        [PLATFORM_TYPES.BOUNCY]: Math.min(0.06 + level * 0.012, 0.18),
-        [PLATFORM_TYPES.MOVING]: Math.min(0.05 + level * 0.015, 0.20),
-        [PLATFORM_TYPES.FRAGILE]: Math.min(0.04 + level * 0.018, 0.25),
-        [PLATFORM_TYPES.BLINKING]: Math.min(0.03 + level * 0.01, 0.15)
+        [PLATFORM_TYPES.BOUNCY]: Math.min(0.06 + level * 0.012, 0.18),  
+        [PLATFORM_TYPES.MOVING]: Math.min(0.05 + level * 0.015, 0.20),  
+        [PLATFORM_TYPES.FRAGILE]: Math.min(0.04 + level * 0.018, 0.25) 
     };
 }
 
@@ -474,24 +465,24 @@ function loadPlayerName() {
         currentPlayerName = savedName;
         currentPlayerNameSpan.textContent = savedName;
         playerNameMenu.style.display = 'none';
-        menu.style.display = 'flex'; // Pokaż menu główne
+        menu.style.display = 'flex'; 
     } else {
-        playerNameMenu.style.display = 'flex'; // Pokaż menu wpisywania nazwy
+        playerNameMenu.style.display = 'flex'; 
         menu.style.display = 'none';
         currentPlayerNameSpan.textContent = 'Graczu';
     }
-    updateLocalHighScoreDisplay(); // Aktualizuj wyświetlanie lokalnego high score
+    updateLocalHighScoreDisplay(); 
 }
 
 function savePlayerNameAndProceed() {
     const nameToSave = playerNameInput.value.trim();
-    if (nameToSave && nameToSave.length > 2 && nameToSave.length <= 15) { // Prosta walidacja
+    if (nameToSave && nameToSave.length > 2 && nameToSave.length <= 15) { 
         currentPlayerName = nameToSave;
         localStorage.setItem('poliTechPlayerName', nameToSave);
         currentPlayerNameSpan.textContent = nameToSave;
         playerNameMenu.style.display = 'none';
         menu.style.display = 'flex';
-        fetchLeaderboard(); // Pobierz ranking od razu po zapisaniu nazwy
+        fetchLeaderboard(); 
     } else {
         alert('Nazwa gracza musi mieć od 3 do 15 znaków.');
         playerNameInput.focus();
@@ -499,11 +490,11 @@ function savePlayerNameAndProceed() {
 }
 
 function skipPlayerName() {
-    currentPlayerName = ''; // Ustaw pustą nazwę, jeśli gracz pomija
+    currentPlayerName = ''; 
     currentPlayerNameSpan.textContent = 'Graczu (anonim)';
     playerNameMenu.style.display = 'none';
     menu.style.display = 'flex';
-    fetchLeaderboard(); // Pobierz ranking nawet jeśli gracz jest anonimowy
+    fetchLeaderboard(); 
 }
 
 function changePlayerName() {
@@ -511,7 +502,7 @@ function changePlayerName() {
     settingsMenu.style.display = 'none';
     leaderboardMenu.style.display = 'none';
     playerNameMenu.style.display = 'flex';
-    playerNameInput.value = currentPlayerName; // Wypełnij input obecną nazwą
+    playerNameInput.value = currentPlayerName; 
     playerNameInput.focus();
 }
 
@@ -538,10 +529,9 @@ function displayLeaderboard(leaderboardData) {
     if (leaderboardData && leaderboardData.length > 0) {
         leaderboardData.forEach((entry, index) => {
             const listItem = document.createElement('li');
-            // Wyróżnij aktualnego gracza, jeśli jest w rankingu
             if (entry.playerName === currentPlayerName && currentPlayerName !== '') {
                 listItem.innerHTML = `<strong>${index + 1}. ${entry.playerName} - ${entry.score} pkt (To Ty!)</strong>`;
-                listItem.style.color = THEME_COLOR_POLYTECHNIC_BLUE; // Kolor wyróżnienia
+                listItem.style.color = THEME_COLOR_POLYTECHNIC_BLUE; 
             } else {
                 listItem.textContent = `${index + 1}. ${entry.playerName} - ${entry.score} pkt`;
             }
@@ -555,7 +545,7 @@ function displayLeaderboard(leaderboardData) {
 async function submitScoreToLeaderboard(finalScore) {
     if (!currentPlayerName) {
         console.log('Wynik nie zostanie zapisany w rankingu online - brak nazwy gracza.');
-        return; // Nie wysyłaj, jeśli gracz jest anonimowy
+        return; 
     }
     if (finalScore <= 0) {
         console.log('Wynik 0 lub mniej, nie wysyłamy do rankingu.');
@@ -760,8 +750,7 @@ function addNewPlatform(maxWidth, minWidth, y) {
         [PLATFORM_TYPES.NORMAL]: { colorTop: '#A0429B', colorBottom: THEME_COLOR_FACULTY_PURPLE, highlightColor: '#B788B5' },
         [PLATFORM_TYPES.BOUNCY]: { colorTop: '#1A48A6', colorBottom: '#13357A', highlightColor: '#7185AF' },
         [PLATFORM_TYPES.MOVING]: { colorTop: '#19A65D', colorBottom: '#009D4C', highlightColor: '#66C493' },
-        [PLATFORM_TYPES.FRAGILE]: { colorTop: '#F18A3B', colorBottom: '#F07E26', highlightColor: '#F9CBA8' },
-        [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' } // Kolory dla mrugającej platformy
+        [PLATFORM_TYPES.FRAGILE]: { colorTop: '#F18A3B', colorBottom: '#F07E26', highlightColor: '#F9CBA8' }
     };
 
     const platformColorPalettes = [
@@ -770,15 +759,13 @@ function addNewPlatform(maxWidth, minWidth, y) {
             [PLATFORM_TYPES.NORMAL]: { colorTop: '#C062BB', colorBottom: '#90328B', highlightColor: '#D7A8D5' },
             [PLATFORM_TYPES.BOUNCY]: { colorTop: '#3A68C6', colorBottom: '#33559A', highlightColor: '#91A5CF' },
             [PLATFORM_TYPES.MOVING]: { colorTop: '#39C67D', colorBottom: '#20B06C', highlightColor: '#86E4B3' },
-            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#feb46b', colorBottom: '#ff9633', highlightColor: '#FFDBCA' },
-            [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' }
+            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#feb46b', colorBottom: '#ff9633', highlightColor: '#FFDBCA' }
         },
         { 
             [PLATFORM_TYPES.NORMAL]: { colorTop: '#8A2BE2', colorBottom: '#4B0082', highlightColor: '#C7A0E5' },
             [PLATFORM_TYPES.BOUNCY]: { colorTop: '#00CED1', colorBottom: '#20B2AA', highlightColor: '#A0E5E5' },
             [PLATFORM_TYPES.MOVING]: { colorTop: '#32CD32', colorBottom: '#228B22', highlightColor: '#98FB98' },
-            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#FF6347', colorBottom: '#DC143C', highlightColor: '#FFA07A' },
-            [PLATFORM_TYPES.BLINKING]: { colorTop: BLINKING_PLATFORM_MAIN_COLOR, colorBottom: '#A00020', highlightColor: '#F05070' }
+            [PLATFORM_TYPES.FRAGILE]: { colorTop: '#FF6347', colorBottom: '#DC143C', highlightColor: '#FFA07A' }
         }
     ];
 
@@ -793,17 +780,14 @@ function addNewPlatform(maxWidth, minWidth, y) {
         type: platformType, level,
         moveDirection: (platformType === PLATFORM_TYPES.MOVING) ? (Math.random() > 0.5 ? 1 : -1) : 0, 
         moveSpeed: (platformType === PLATFORM_TYPES.MOVING) ? 
-            Math.min(PLATFORM_BASE_MOVE_SPEED + Math.random() * Math.min(level, 8) * 20, PLATFORM_MAX_MOVE_SPEED) : 0,
+            Math.min(PLATFORM_BASE_MOVE_SPEED + Math.random() * Math.min(level, 8) * 20, PLATFORM_MAX_MOVE_SPEED) : 0, 
         health: (platformType === PLATFORM_TYPES.FRAGILE) ? 1 : Infinity, 
         bounceVelocity: (platformType === PLATFORM_TYPES.BOUNCY) ? (JUMP_VELOCITY_INITIAL * 1.5) : JUMP_VELOCITY_INITIAL, 
-        borderRadius: borderRadius,
-        isVisible: (platformType === PLATFORM_TYPES.BLINKING) ? true : undefined,
-        blinkTimer: (platformType === PLATFORM_TYPES.BLINKING) ? BLINKING_PLATFORM_VISIBLE_DURATION : undefined,
-        initialBlinkOffset: (platformType === PLATFORM_TYPES.BLINKING) ? Math.random() * BLINKING_PLATFORM_INTERVAL : 0
+        borderRadius: borderRadius
     };
     platforms.push(newPlatform); 
 
-    if (Math.random() < COLLECTIBLE_CHANCE && platformType !== PLATFORM_TYPES.FRAGILE && platformType !== PLATFORM_TYPES.BLINKING) {
+    if (Math.random() < COLLECTIBLE_CHANCE && platformType !== PLATFORM_TYPES.FRAGILE) { 
         createCollectible(x + platformWidth / 2, y); 
     }
     return newPlatform;
@@ -851,7 +835,6 @@ function startGameLogic() {
     }
 
     lastTime = 0; 
-    gameTime = 0;
     gameAnimationLoop(); 
 }
 
@@ -861,8 +844,7 @@ function resetGameLogic() {
     scoreDisplay.innerText = `Punkty: ${score}`; 
     cameraOffset = 0; 
     collectibles = []; 
-    keys = { ArrowLeft: false, ArrowRight: false }; 
-    gameTime = 0;
+    keys = { ArrowLeft: false, ArrowRight: false };
 
     resetPlayerState(); 
     createInitialPlatforms(); 
@@ -922,7 +904,6 @@ function keyUpHandler(e) {
 // ===== LOGIKA AKTUALIZACJI GRY =====
 function update(deltaTime) {
     if (!gameRunning) return; 
-    gameTime += deltaTime * 1000;
 
     updatePlayerMovement(deltaTime); 
     updatePlayerPhysics(deltaTime); 
@@ -1001,10 +982,6 @@ function updatePlatforms(deltaTime) {
                 p.x = Math.max(0, Math.min(p.x, canvas.width - p.width)); 
             }
         }
-        if (p.type === PLATFORM_TYPES.BLINKING) {
-            const timeInCycle = (gameTime + p.initialBlinkOffset) % BLINKING_PLATFORM_INTERVAL;
-            p.isVisible = timeInCycle < BLINKING_PLATFORM_VISIBLE_DURATION;
-        }
     });
     platforms = platforms.filter(p => p.health > 0); 
 }
@@ -1012,10 +989,6 @@ function updatePlatforms(deltaTime) {
 function checkPlatformCollisions(deltaTime) {
     for (let i = 0; i < platforms.length; i++) {
         const p = platforms[i];
-
-        if (p.type === PLATFORM_TYPES.BLINKING && !p.isVisible) {
-            continue;
-        }
 
         const playerFeetCurrent = player.y + player.height; 
         const playerFeetPrevious = (player.y - (player.vy * deltaTime)) + player.height; 
@@ -1177,29 +1150,15 @@ function drawPlatforms() {
         if (p.type === PLATFORM_TYPES.FRAGILE && p.health < 1) {
             return; 
         }
-        if (p.type === PLATFORM_TYPES.BLINKING && !p.isVisible) {
-            return;
-        }
 
         const platformGradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
         platformGradient.addColorStop(0, p.colorTop); 
         platformGradient.addColorStop(1, p.colorBottom); 
         ctx.fillStyle = platformGradient;
         
-        if (p.type === PLATFORM_TYPES.BLINKING) {
-            const timeInCycle = (gameTime + p.initialBlinkOffset) % BLINKING_PLATFORM_INTERVAL;
-            const timeLeftVisible = BLINKING_PLATFORM_VISIBLE_DURATION - timeInCycle;
-            if (timeInCycle < BLINKING_PLATFORM_VISIBLE_DURATION && timeLeftVisible < 300) {
-                ctx.globalAlpha = Math.max(0.2, timeLeftVisible / 300);
-            } else {
-                 ctx.globalAlpha = 1;
-            }
-        } else {
-            ctx.globalAlpha = 1;
-        }
-
-        drawRoundedRect(ctx, p.x, p.y, p.width, p.height, p.borderRadius || 0); 
         ctx.globalAlpha = 1;
+
+        drawRoundedRect(ctx, p.x, p.y, p.width, p.height, p.borderRadius || 0);
 
         ctx.fillStyle = p.highlightColor;
         
