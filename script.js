@@ -5,6 +5,12 @@
 
 // ===== GŁÓWNE USTAWIENIA GRY I STAŁE =====
 
+// Definicja URL-i do funkcji Cloudflare
+const CLOUDFLARE_FUNCTIONS_BASE_URL = 'https://poli-and-tech-it.pages.dev'; // Twój adres bazowy Cloudflare Pages
+const LEADERBOARD_URL = `${CLOUDFLARE_FUNCTIONS_BASE_URL}/get-leaderboard`;
+const SUBMIT_SCORE_URL = `${CLOUDFLARE_FUNCTIONS_BASE_URL}/submit-score`;
+
+
 // ===== ELEMENTY DOM =====
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -510,7 +516,7 @@ async function fetchLeaderboard() {
     if (!leaderboardList) return;
     leaderboardList.innerHTML = '<li class="loading">Ładowanie rankingu...</li>';
     try {
-        const response = await fetch('/get-leaderboard'); 
+        const response = await fetch(LEADERBOARD_URL); // Użycie pełnego URL
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
@@ -554,7 +560,7 @@ async function submitScoreToLeaderboard(finalScore) {
 
     console.log(`Wysyłanie wyniku: ${finalScore} dla gracza: ${currentPlayerName}`);
     try {
-        const response = await fetch('/submit-score', {
+        const response = await fetch(SUBMIT_SCORE_URL, { // Użycie pełnego URL
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
