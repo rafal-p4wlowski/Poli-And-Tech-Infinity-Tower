@@ -2,11 +2,22 @@ import { Redis } from '@upstash/redis';
 
 const LEADERBOARD_KEY = 'leaderboard';
 
-// Lista dozwolonych domen (origin)
 const allowedOrigins = [
     'https://poli-and-tech-it.pages.dev',
     'https://rafal-p4wlowski.github.io',
 ];
+
+export async function onRequestOptions(context) {
+  const origin = context.request.headers.get('Origin');
+  const responseHeaders = {};
+
+  if (allowedOrigins.includes(origin)) {
+      responseHeaders['Access-Control-Allow-Origin'] = origin;
+      responseHeaders['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
+      responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
+  }
+  return new Response(null, { headers: responseHeaders, status: 204 });
+}
 
 export async function onRequestPost(context) {
   const origin = context.request.headers.get('Origin');
@@ -16,20 +27,6 @@ export async function onRequestPost(context) {
 
   if (allowedOrigins.includes(origin)) {
       responseHeaders['Access-Control-Allow-Origin'] = origin;
-      responseHeaders['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
-      responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
-  }
-
-  // Obsługa żądania OPTIONS
-  if (context.request.method === 'OPTIONS') {
-      return new Response(null, { headers: responseHeaders, status: 204 });
-  }
-
-  if (context.request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-        status: 405,
-        headers: responseHeaders
-    });
   }
 
   try {
@@ -68,16 +65,15 @@ export async function onRequestPost(context) {
     }
 
     const trimmedPlayerName = playerName.trim();
-
-    // Połączona walidacja długości i znaków
     const validNamePattern = /^[a-zA-Z0-9 _ĄąĆćĘęŁłŃńÓóŚśŹźŻż-]+$/;
+
     if (trimmedPlayerName.length < 3 || trimmedPlayerName.length > 15 || !validNamePattern.test(trimmedPlayerName)) {
-        let errorDetail = 'Nazwa gracza musi mieć od 3 do 15 znaków i może zawierać tylko litery, cyfry, spacje, podkreślenia, myślniki oraz polskie znaki.';
-        if (trimmedPlayerName.length < 3 || trimmedPlayerName.length > 15) {
-            errorDetail = 'Nazwa gracza musi mieć od 3 do 15 znaków.';
-        } else if (!validNamePattern.test(trimmedPlayerName)) {
-            errorDetail = 'Nazwa gracza zawiera niedozwolone znaki.';
-        }
+        let errorDetail = 'Nazwa gracza musi mieć od 3 do 15 znaków i może zawierać tylko dozwolone znaki.';
+         if (trimmedPlayerName.length < 3 || trimmedPlayerName.length > 15) {
+             errorDetail = 'Nazwa gracza musi mieć od 3 do 15 znaków.';
+         } else if (!validNamePattern.test(trimmedPlayerName)) {
+             errorDetail = 'Nazwa gracza zawiera niedozwolone znaki.';
+         }
         return new Response(JSON.stringify({ error: errorDetail }), {
             status: 400,
             headers: responseHeaders,
@@ -97,12 +93,12 @@ export async function onRequestPost(context) {
     if (currentScore === null || newScore > currentScore) {
       await redis.zadd(LEADERBOARD_KEY, { score: newScore, member: trimmedPlayerName });
       return new Response(JSON.stringify({ message: 'Wynik zapisany pomyślnie!' }), {
-        status: 201,
+        status: 201, 
         headers: responseHeaders,
       });
     } else {
       return new Response(JSON.stringify({ message: 'Nowy wynik nie jest lepszy od poprzedniego. Nie zaktualizowano.' }), {
-        status: 200,
+        status: 200, 
         headers: responseHeaders,
       });
     }
@@ -110,7 +106,6 @@ export async function onRequestPost(context) {
   } catch (error) {
     console.error('Błąd podczas zapisywania wyniku do Upstash Redis:', error);
     const clientErrorMessage = 'Nie udało się zapisać wyniku z powodu błędu serwera.';
-
     return new Response(JSON.stringify({ error: clientErrorMessage, details: error.message }), {
       status: 500,
       headers: responseHeaders,

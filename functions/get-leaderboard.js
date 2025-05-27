@@ -1,13 +1,23 @@
 import { Redis } from '@upstash/redis';
 
-// Klucz w Redis, pod którym będziemy przechowywać ranking (Sorted Set)
 const LEADERBOARD_KEY = 'leaderboard';
 
-// Lista dozwolonych domen (origin)
 const allowedOrigins = [
     'https://poli-and-tech-it.pages.dev',
     'https://rafal-p4wlowski.github.io',
 ];
+
+export async function onRequestOptions(context) {
+  const origin = context.request.headers.get('Origin');
+  const responseHeaders = {};
+
+  if (allowedOrigins.includes(origin)) {
+      responseHeaders['Access-Control-Allow-Origin'] = origin;
+      responseHeaders['Access-Control-Allow-Methods'] = 'GET, OPTIONS';
+      responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
+  }
+  return new Response(null, { headers: responseHeaders, status: 204 });
+}
 
 export async function onRequestGet(context) {
   const origin = context.request.headers.get('Origin');
@@ -17,21 +27,6 @@ export async function onRequestGet(context) {
 
   if (allowedOrigins.includes(origin)) {
       responseHeaders['Access-Control-Allow-Origin'] = origin;
-      responseHeaders['Access-Control-Allow-Methods'] = 'GET, OPTIONS';
-      responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
-  }
-
-  // Obsługa żądania OPTIONS
-  if (context.request.method === 'OPTIONS') {
-      return new Response(null, { headers: responseHeaders, status: 204 });
-  }
-
-  // Jeśli to nie GET ani OPTIONS
-  if (context.request.method !== 'GET') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-        status: 405,
-        headers: responseHeaders
-    });
   }
 
   try {
@@ -61,8 +56,8 @@ export async function onRequestGet(context) {
     }
 
     return new Response(JSON.stringify(leaderboard), {
+      status: 200,
       headers: responseHeaders,
-      status: 200
     });
 
   } catch (error) {
