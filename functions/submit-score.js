@@ -2,13 +2,10 @@ import { Redis } from '@upstash/redis';
 
 const LEADERBOARD_KEY = 'leaderboard';
 
-// Lista dozwolonych domen (origin) - ta sama co w get-leaderboard.js
+// Lista dozwolonych domen (origin)
 const allowedOrigins = [
     'https://poli-and-tech-it.pages.dev',
     'https://rafal-p4wlowski.github.io',
-    // Dodaj tutaj adresy lokalne, jeśli testujesz, np.:
-    // 'http://localhost:3000',
-    // 'http://127.0.0.1:5500'
 ];
 
 export async function onRequestPost(context) {
@@ -23,7 +20,7 @@ export async function onRequestPost(context) {
       responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
   }
 
-  // Obsługa żądania OPTIONS (preflight)
+  // Obsługa żądania OPTIONS
   if (context.request.method === 'OPTIONS') {
       return new Response(null, { headers: responseHeaders, status: 204 });
   }
@@ -42,7 +39,7 @@ export async function onRequestPost(context) {
       console.error('Brak zmiennych środowiskowych dla Upstash Redis.');
       return new Response(JSON.stringify({ error: 'Błąd konfiguracji serwera.' }), {
         status: 500,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
@@ -59,14 +56,14 @@ export async function onRequestPost(context) {
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Nieprawidłowy format JSON w żądaniu.' }), {
         status: 400,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
     if (typeof playerName !== 'string') {
       return new Response(JSON.stringify({ error: 'Nazwa gracza musi być tekstem.' }), {
         status: 400,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
@@ -83,14 +80,14 @@ export async function onRequestPost(context) {
         }
         return new Response(JSON.stringify({ error: errorDetail }), {
             status: 400,
-            headers: responseHeaders, // Dodano responseHeaders
+            headers: responseHeaders,
         });
     }
     
     if (typeof newScore !== 'number' || isNaN(newScore) || newScore < 0 || !Number.isInteger(newScore)) {
       return new Response(JSON.stringify({ error: 'Nieprawidłowy wynik. Musi być liczbą całkowitą, nieujemną.' }), {
         status: 400,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
@@ -101,22 +98,22 @@ export async function onRequestPost(context) {
       await redis.zadd(LEADERBOARD_KEY, { score: newScore, member: trimmedPlayerName });
       return new Response(JSON.stringify({ message: 'Wynik zapisany pomyślnie!' }), {
         status: 201,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     } else {
       return new Response(JSON.stringify({ message: 'Nowy wynik nie jest lepszy od poprzedniego. Nie zaktualizowano.' }), {
         status: 200,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
   } catch (error) {
     console.error('Błąd podczas zapisywania wyniku do Upstash Redis:', error);
     const clientErrorMessage = 'Nie udało się zapisać wyniku z powodu błędu serwera.';
-    // Warto logować `error.message` po stronie serwera, ale niekoniecznie wysyłać go do klienta
-    return new Response(JSON.stringify({ error: clientErrorMessage, details: error.message }), { // Dodano details do odpowiedzi dla debugowania
+
+    return new Response(JSON.stringify({ error: clientErrorMessage, details: error.message }), {
       status: 500,
-      headers: responseHeaders, // Dodano responseHeaders
+      headers: responseHeaders,
     });
   }
 }

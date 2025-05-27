@@ -5,14 +5,11 @@ const LEADERBOARD_KEY = 'leaderboard';
 
 // Lista dozwolonych domen (origin)
 const allowedOrigins = [
-    'https://poli-and-tech-it.pages.dev',    // Twoja domena Cloudflare Pages
-    'https://rafal-p4wlowski.github.io',   // Twoja domena GitHub Pages
-    // Dodaj tutaj adresy lokalne, jeśli testujesz, np.:
-    // 'http://localhost:3000',
-    // 'http://127.0.0.1:5500' // Częsty port dla Live Server w VS Code
+    'https://poli-and-tech-it.pages.dev',
+    'https://rafal-p4wlowski.github.io',
 ];
 
-export async function onRequestGet(context) { // Zmieniono z onRequest na onRequestGet dla jasności
+export async function onRequestGet(context) {
   const origin = context.request.headers.get('Origin');
   const responseHeaders = {
       'Content-Type': 'application/json',
@@ -24,12 +21,12 @@ export async function onRequestGet(context) { // Zmieniono z onRequest na onRequ
       responseHeaders['Access-Control-Allow-Headers'] = 'Content-Type';
   }
 
-  // Obsługa żądania OPTIONS (preflight)
+  // Obsługa żądania OPTIONS
   if (context.request.method === 'OPTIONS') {
       return new Response(null, { headers: responseHeaders, status: 204 });
   }
 
-  // Jeśli to nie GET ani OPTIONS (choć nazwa funkcji sugeruje tylko GET)
+  // Jeśli to nie GET ani OPTIONS
   if (context.request.method !== 'GET') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
         status: 405,
@@ -44,7 +41,7 @@ export async function onRequestGet(context) { // Zmieniono z onRequest na onRequ
       console.error('Brak zmiennych środowiskowych dla Upstash Redis.');
       return new Response(JSON.stringify({ error: 'Błąd konfiguracji serwera.' }), {
         status: 500,
-        headers: responseHeaders, // Dodano responseHeaders
+        headers: responseHeaders,
       });
     }
 
@@ -64,15 +61,15 @@ export async function onRequestGet(context) { // Zmieniono z onRequest na onRequ
     }
 
     return new Response(JSON.stringify(leaderboard), {
-      headers: responseHeaders, // Dodano responseHeaders
-      status: 200 // Jawne ustawienie statusu 200
+      headers: responseHeaders,
+      status: 200
     });
 
   } catch (error) {
     console.error('Błąd podczas pobierania rankingu z Upstash Redis:', error);
     return new Response(JSON.stringify({ error: 'Nie udało się pobrać rankingu.', details: error.message }), {
       status: 500,
-      headers: responseHeaders, // Dodano responseHeaders
+      headers: responseHeaders,
     });
   }
 }
